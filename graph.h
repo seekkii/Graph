@@ -6,25 +6,21 @@
 #include <QTextEdit>
 #include <QMap>
 #include <QList>
-class Graph : public QTextEdit
+class Graph : public QObject
 {
+     Q_OBJECT
     int V;    // No. of vertices
     bool* visited;
     // Pointer to an array containing adjacency
     // lists
     QList<int> *adj;
 public:
-    using QTextEdit::QTextEdit;
-
     Graph(int V);  // Constructor
 
-    // function to add an edge to graph
-    void addEdge(int v, int w);
-    void DFS(int v);  // DFS traversal
 
-    // utility function called by DFS
-    // prints BFS traversal from a given source s
-    void BFS(int s);
+    void addEdge(int v, int w);  // function to add an edge to graph
+    void DFS(int v);  // DFS
+    void BFS(int s); //  BFS
 
 };
 

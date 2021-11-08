@@ -18,7 +18,7 @@ void Graph::DFS(int v)
 {
 visited[v] = true;
   QList<int> adjList = adj[v];
-  setText(QString::number(v));
+  //print node v
 
   QList<int>::iterator i;
   for (i = adjList.begin(); i != adjList.end(); ++i)
@@ -48,7 +48,7 @@ void Graph::BFS(int s)
     {
         // Dequeue a vertex from queue and print it
         s = queue.front();
-       setText(QString::number(s)+' ');
+        //print node from queue
         queue.pop_front();
 
         // Get all adjacent vertices of the dequeued
@@ -64,7 +64,6 @@ void Graph::BFS(int s)
         }
     }
 }
-
 
 
 

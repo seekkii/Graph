@@ -1,39 +1,49 @@
 #ifndef UI_H
 #define UI_H
 
-#include <QTextEdit>
 #include <QMouseEvent>
 #include <QString>
 #include <QtWidgets>
+#include <QPainter>
+
+
 
 class CustomWidget : public QWidget
 {
+    Q_OBJECT;
    QPoint m_mousePos;
-   QList<QPoint> list;
-   QList<QPoint>::iterator i;
+   QVector<QPoint> vect;
+   public:
+   explicit CustomWidget(QWidget *parent = nullptr);
+      void paintEvent(QPaintEvent *) override;
 
 
-public:
-   explicit CustomWidget(QWidget *parent = nullptr) : QWidget{parent} {}
-   void paintEvent(QPaintEvent *) override;
-   int keyByNum(const Qt::MouseButton key);
+      void mousePressEvent(QMouseEvent *event) override
+      {
+          m_mousePos = event->pos();
+          vect.append(m_mousePos);
+          update();
+      }
+      const char* toCh_pointer(int i);
 
-   void mousePressEvent(QMouseEvent *event) override
-   {
-       m_mousePos = event->pos();
+    private slots:
+      int Edge(int f_node, int s_node);//check whether two nodes are available to be connect
+    private:
 
-       list.append(m_mousePos);
-       update();
-   }
-
-
-
-   void mouseMoveEvent(QMouseEvent *event) override
-   {
-       m_mousePos = event->pos();
-       update();
-   }
 
 };
+
+class GraphWidget : public QWidget
+{
+ Q_OBJECT;
+ public:
+   explicit GraphWidget(QWidget *parent = nullptr);
+   QSpinBox *ui_inputSpinBox1;
+   QSpinBox *ui_inputSpinBox2;
+ public : signals :
+   void yourSignal();
+
+};
+
 
 #endif // UI_H
