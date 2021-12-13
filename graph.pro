@@ -18,7 +18,7 @@ HEADERS += \
     graph.h
 
 FORMS +=
-
+QT += widgets uitools
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

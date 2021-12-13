@@ -2,46 +2,57 @@
 #define UI_H
 
 #include <QMouseEvent>
-#include <QString>
 #include <QtWidgets>
 #include <QPainter>
+#include <graph.h>
+#include <QtUiTools>
+#include <QFile>
+#include <cmath>
 
 
-
-class CustomWidget : public QWidget
-{
-    Q_OBJECT;
-   QPoint m_mousePos;
-   QVector<QPoint> vect;
-   public:
-   explicit CustomWidget(QWidget *parent = nullptr);
-      void paintEvent(QPaintEvent *) override;
-
-
-      void mousePressEvent(QMouseEvent *event) override
-      {
-          m_mousePos = event->pos();
-          vect.append(m_mousePos);
-          update();
-      }
-      const char* toCh_pointer(int i);
-
-    private slots:
-      int Edge(int f_node, int s_node);//check whether two nodes are available to be connect
-    private:
-
-
-};
 
 class GraphWidget : public QWidget
 {
- Q_OBJECT;
+ Q_OBJECT
  public:
-   explicit GraphWidget(QWidget *parent = nullptr);
-   QSpinBox *ui_inputSpinBox1;
-   QSpinBox *ui_inputSpinBox2;
- public : signals :
-   void yourSignal();
+    friend class Graph;
+    QPoint m_mousePos;
+    QVector<QPoint> vect;
+    QVector<QVector4D> edge;
+    QVector<QLine> lines;
+       explicit GraphWidget(QWidget *parent = nullptr);
+       void paintEvent(QPaintEvent *) override;
+
+
+       void mousePressEvent(QMouseEvent *event) override
+       {
+           m_mousePos = event->pos();
+           vect.append(m_mousePos);
+           update();
+       }
+
+     QPoint Pointfromdis(QPoint p, QPoint p0, int d);//return a point that is the intersection of circle r and line rp
+     void paintlist(QPainter &painter, QList<QPoint> list);
+
+ private slots:
+   void on_DFS_clicked();
+   void on_BFS_clicked();
+   void on_addEdge_clicked();
+   void on_undirected_clicked();
+   void on_directed_clicked();
+ private:
+   Graph g;
+   QList<QPoint>l;
+   QList<QPoint>l_b;
+
+   QSpinBox *node_1;
+   QSpinBox *node_2;
+   QSpinBox *weight;
+   QSpinBox *fromver;
+   QLabel *display;
+   static const int h = 55;//diameter of the circle drawn
+   bool directed;
+
 
 };
 
