@@ -9,24 +9,27 @@
 
 class Graph
 {
-
-
 public:
     Graph();//constructor
+    ~Graph();//destructor
     void reSize(int size);// resize the number of vertices
-    void addEdgedirec(int v, int w,int weight);  // function to add an edge to graph
-    void addEdgeundirec(int v, int w,int wt);
-    void delEdge(int v, int w); // function to delete an edge from graph
+    int size();//return size of graph
+    void addEdgedirec(int v, int w,int weight);  // function to add an edge to graph directed
+    void addEdgeundirec(int v, int w,int wt);    // function to add an edge to graph undirected
+    void clear();
+
     void DFS(int v);  // DFS
     QList<QPoint> BFS(int s); //  BFS
-    QList<QPoint> getDFSlist();//get a list that contains DFS iterate
-    QList<QPoint> result;// list contains DFS iterate
-    QVector<QList<QPoint>> adj;//adjacency list
+    const QList<QPoint> getDFSlist();//get a list that contains DFS iterate
+
+
 
 private:
     int V;    // numbers of vertices
     bool *visited; // array of bool ptr to record when a node is visited
-    int weight;
+    QVector<QList<QPoint>> adj;//adjacency list
+    QList<QPoint> result;// list contains DFS iterate
+
 
 };
 

@@ -1,14 +1,16 @@
 #include "graph.h"
+#include "QDebug"
+
 Graph::Graph()
 {
     V = 0;
-    visited = new bool[0];
+    visited = new bool[V];
     adj.resize(0);
-
 }// constructor
 void Graph::reSize(int size)
 {
     adj.resize(size);
+
     //resize visited[]
     bool *q = new bool[size];
     for (int i = 0; i < V; i++)
@@ -20,6 +22,22 @@ void Graph::reSize(int size)
     q = NULL;
     V = size;
 }//resize number of verticles
+int Graph::size()
+{
+    return V;
+}
+
+void Graph::clear()
+{
+    adj.clear();
+}
+
+Graph::~Graph()
+{
+    adj.clear();
+    delete visited;
+    visited = nullptr;
+}
 
 void Graph::addEdgedirec(int v, int w, int wt)
 {
@@ -28,8 +46,7 @@ void Graph::addEdgedirec(int v, int w, int wt)
     adj[v].removeOne(f_pair);
     adj[w].removeOne(s_pair);
     adj[v].push_back(f_pair);
-
-}
+}//delete existing edge(v,w,wt) if there is and add this edge to the graph directedly
 
 void Graph::addEdgeundirec(int v, int w,int wt)
 {
@@ -39,38 +56,37 @@ void Graph::addEdgeundirec(int v, int w,int wt)
     adj[w].removeOne(s_pair);
     adj[v].push_back(f_pair);
     adj[w].push_back(s_pair);
-}
+}//delete existing edge(v,w,wt) if there is and add this edge to the graph undirectedly
 
-void Graph::delEdge(int v, int w)
-{
-
-    adj[v].remove(w);
-}//Delete w from v's list
 
 void Graph::DFS(int v)
 {
-visited[v] = true;
+  visited[v] = true;
   QList<QPoint> adjList = adj[v];
-
   QList<QPoint>::iterator i;
+  qDebug()<<visited[0];
   for (i = adjList.begin(); i != adjList.end(); ++i)
+
     if (!visited[(*i).x()])
       {
 
         QPoint p(v,(*i).x());
         result.push_back(p);
+        qDebug() << v <<" ";
         DFS((*i).x());
     }
 }// run recursive function for DFS
 
-QList<QPoint> Graph::getDFSlist()
+const QList<QPoint> Graph::getDFSlist()
 {
-    for (int i = 0; i <= V; i++)
+    for (int i = 0; i < V; i++)
     {
         visited[i] = false;
     }
     QList<QPoint> l = result;
     result.clear();
+
+    qDebug()<<"size" << l.size();
     return l;
 }// return a list of dfs iterate
 
@@ -82,10 +98,8 @@ QList<QPoint> Graph::BFS(int s)
     for(int i = 0; i < V; i++)
         visited[i] = false;
 
-    // Queue for BFS
     QList<int> queue;
 
-    // Mark the current node as visited and enqueue it
     visited[s] = true;
     queue.push_back(s);
 
