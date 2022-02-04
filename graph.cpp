@@ -30,6 +30,8 @@ int Graph::size()
 void Graph::clear()
 {
     adj.clear();
+    V = 0;
+
 }
 
 Graph::~Graph()
@@ -64,7 +66,6 @@ void Graph::DFS(int v)
   visited[v] = true;
   QList<QPoint> adjList = adj[v];
   QList<QPoint>::iterator i;
-  qDebug()<<visited[0];
   for (i = adjList.begin(); i != adjList.end(); ++i)
 
     if (!visited[(*i).x()])
@@ -72,7 +73,7 @@ void Graph::DFS(int v)
 
         QPoint p(v,(*i).x());
         result.push_back(p);
-        qDebug() << v <<" ";
+
         DFS((*i).x());
     }
 }// run recursive function for DFS
@@ -86,7 +87,6 @@ const QList<QPoint> Graph::getDFSlist()
     QList<QPoint> l = result;
     result.clear();
 
-    qDebug()<<"size" << l.size();
     return l;
 }// return a list of dfs iterate
 

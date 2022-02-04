@@ -52,7 +52,7 @@ class GraphWidget : public QWidget
    void on_directed_clicked();// add edge undirected
    void on_load_clicked();
    void on_save_clicked();
-
+   void on_clear_clicked();
    void AdvanceState();
  private:
    Graph g;//Graph data structure

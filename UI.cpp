@@ -204,7 +204,7 @@ void GraphWidget::paintEvent(QPaintEvent *)
      if (edge[i].z() == 1)
      {
         DrawLineWithArrow(painter,p2,p1);
-        if (edge[i].w() >0 )
+        if (edge[i].w() >1 )
         {
            QPoint p = ((p2+p1)/2);
            paintnumfrompoint(painter,p,edge[i].w());
@@ -216,7 +216,7 @@ void GraphWidget::paintEvent(QPaintEvent *)
 
 
          painter.drawLine(p2,p1);
-         if (edge[i].w() >0 )
+         if (edge[i].w() >1 )
          {
              QPoint p = ((p2+p1)/2);
              paintnumfrompoint(painter,p,edge[i].w());
@@ -418,6 +418,7 @@ void GraphWidget::on_load_clicked()
     g.reSize(row);
     for (int i = 0 ; i < edge.size(); i ++)
     {
+        qDebug()<<edge[i].x()<<edge[i].y();
         g.addEdgedirec(edge[i].x(),edge[i].y(),edge[i].w());
     }
 
@@ -430,7 +431,7 @@ void GraphWidget::on_load_clicked()
     }
 
     update();
-
+    file.close();
 }
 void GraphWidget::on_save_clicked()
 {
@@ -446,7 +447,12 @@ void GraphWidget::on_save_clicked()
     str.resize(g.size(),QVector<int>( g.size() ));
     for (int i = 0 ; i < edge.size();i++)
     {
-        str[edge[i].x()][edge[i].y()] = edge[i].w();
+        if ((edge[i].x() != 0 || edge[i].y()!=0) && edge[i].w() == 0)
+            str[edge[i].x()][edge[i].y()] = 1;
+        else {
+            str[edge[i].x()][edge[i].y()] = edge[i].w();
+        }
+
     }
 
     for(int i = 0; i < g.size();i++)
@@ -454,6 +460,7 @@ void GraphWidget::on_save_clicked()
         {
             out<<str[i][j];
             out<<" ";
+
             if (j == g.size()-1)
             {
                out <<'\n';
@@ -462,6 +469,14 @@ void GraphWidget::on_save_clicked()
         }
 
     file.commit();
-
 }
+
+ void GraphWidget::on_clear_clicked()
+ {
+     vect.clear();
+     edge.clear();
+     g.clear();
+     update();
+
+ }
 
