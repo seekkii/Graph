@@ -63,7 +63,13 @@ GraphWidget::GraphWidget(QWidget *parent)
       _timer.start(100);
 
     QVBoxLayout *layout = new QVBoxLayout;
+    createActions();
+    createMenus();
+    bar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    layout->addWidget(bar);
     layout->addWidget(formWidget);
+
+
 
 
 
@@ -72,6 +78,32 @@ GraphWidget::GraphWidget(QWidget *parent)
     directed = false;
 
 }//constructor of graph widget
+
+void GraphWidget::createActions()
+{
+    clAct = new QAction(tr("&Clear graph"), this);
+
+    clDrawn = new QAction(tr("&Clear DFS/BFS"), this);
+
+    loadact = new QAction(tr("&Load"), this);
+
+    saveact = new QAction(tr("&Save"), this);
+    connect(clAct, &QAction::triggered, this, &GraphWidget::clear);
+    connect(clDrawn, &QAction::triggered, this, &GraphWidget::cleardrawn);
+    connect(loadact, &QAction::triggered, this, &GraphWidget::load);
+    connect(saveact, &QAction::triggered, this, &GraphWidget::save);
+}
+
+void GraphWidget::createMenus()
+{
+    bar = new QMenuBar;
+    fileMenu = bar->addMenu(tr("&File"));
+    graphMenu = bar->addMenu(tr("&Graph"));
+    graphMenu->addAction(clAct);
+    graphMenu->addAction(clDrawn);
+    fileMenu->addAction(loadact);
+    fileMenu->addAction(saveact);
+}
 
 
 void GraphWidget::paintlist(QPainter &painter, QList<QPoint> list)
@@ -93,7 +125,7 @@ void GraphWidget::paintlist(QPainter &painter, QList<QPoint> list)
       if (edge[i].z() == 1)
       {
          DrawLineWithArrow(painter,p2,p1);
-         if (edge[i].w() != 0)
+         if (edge[i].w() >1 )
          {
             QPoint p = ((p2+p1)/2);
             paintnumfrompoint(painter,p,edge[i].w());
@@ -106,7 +138,7 @@ void GraphWidget::paintlist(QPainter &painter, QList<QPoint> list)
        {
 
           painter.drawLine(p2,p1);
-          if (edge[i].w() != 0)
+          if (edge[i].w() >1)
 
           {
               QPoint p = ((p2+p1)/2);
@@ -265,7 +297,7 @@ void GraphWidget::on_addEdge_clicked()
 {
    if (node_1->value() < vect.size() && node_2->value() < vect.size())
     {
-        if (directed == true)// if user want to add verticle directedly
+        if (directed)// if user want to add verticle directedly
         {
            for (int i = 0; i < edge.size();i++)
            {
@@ -381,7 +413,7 @@ void GraphWidget::on_directed_clicked()
     directed = true;
 }
 
-void GraphWidget::on_load_clicked()
+void GraphWidget::load()
 {
 
     QString line;
@@ -412,13 +444,14 @@ void GraphWidget::on_load_clicked()
             row ++;
 
     }
+    for(int i = 0 ; i <edge.size();i++)
+        qDebug()<<edge[i];
     vect.clear();
     vect.resize(row);
     g.clear();
     g.reSize(row);
     for (int i = 0 ; i < edge.size(); i ++)
     {
-        qDebug()<<edge[i].x()<<edge[i].y();
         g.addEdgedirec(edge[i].x(),edge[i].y(),edge[i].w());
     }
 
@@ -433,7 +466,7 @@ void GraphWidget::on_load_clicked()
     update();
     file.close();
 }
-void GraphWidget::on_save_clicked()
+void GraphWidget::save()
 {
     QString fileName = QFileDialog::getSaveFileName(this);
     QSaveFile file(fileName);
@@ -447,10 +480,24 @@ void GraphWidget::on_save_clicked()
     str.resize(g.size(),QVector<int>( g.size() ));
     for (int i = 0 ; i < edge.size();i++)
     {
-        if ((edge[i].x() != 0 || edge[i].y()!=0) && edge[i].w() == 0)
-            str[edge[i].x()][edge[i].y()] = 1;
-        else {
-            str[edge[i].x()][edge[i].y()] = edge[i].w();
+        if (edge[i].z() == -1){
+            if (edge[i].w() == 0)
+            {
+                str[edge[i].x()][edge[i].y()] = 1;
+                str[edge[i].y()][edge[i].x()] = 1;
+            }
+            else
+            {
+                str[edge[i].x()][edge[i].y()] = edge[i].w();
+                str[edge[i].y()][edge[i].x()] = edge[i].w();
+            }
+        }
+        if (edge[i].z() == 1)
+            {
+                if (edge[i].w() == 0)
+                    str[edge[i].x()][edge[i].y()] = 1;
+                else
+                    str[edge[i].x()][edge[i].y()] = edge[i].w();
         }
 
     }
@@ -458,6 +505,7 @@ void GraphWidget::on_save_clicked()
     for(int i = 0; i < g.size();i++)
         for(int j = 0; j < g.size();j++)
         {
+
             out<<str[i][j];
             out<<" ";
 
@@ -471,12 +519,22 @@ void GraphWidget::on_save_clicked()
     file.commit();
 }
 
- void GraphWidget::on_clear_clicked()
+ void GraphWidget::clear()
  {
      vect.clear();
      edge.clear();
      g.clear();
+     l.clear();
+     l_b.clear();
      update();
 
- }
+}
 
+
+void GraphWidget::cleardrawn()
+{
+    l.clear();
+    l_b.clear();
+    display->setText("");
+    update();
+}

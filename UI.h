@@ -43,6 +43,8 @@ class GraphWidget : public QWidget
 
     QPoint Pointfromdis(QPoint p, QPoint p0, int d);//return a point that is on pp0 and far from po a distance d
     void paintlist(QPainter &painter, QList<QPoint> list);//draw a graph from QList<QPoint> list
+    void createActions();
+    void createMenus();
 
  private slots:
 
@@ -50,9 +52,10 @@ class GraphWidget : public QWidget
    void on_addEdge_clicked();// do connecting vertices
    void on_undirected_clicked();// add edge diected
    void on_directed_clicked();// add edge undirected
-   void on_load_clicked();
-   void on_save_clicked();
-   void on_clear_clicked();
+   void load();
+   void save();
+   void clear();
+   void cleardrawn();
    void AdvanceState();
  private:
    Graph g;//Graph data structure
@@ -69,14 +72,25 @@ class GraphWidget : public QWidget
 
    QSpinBox *node_1;// spinbox to get v1 value
    QSpinBox *node_2;// spinbox to get v2 value
+
+
    QSpinBox *weight;// spinbox to get v1 v2 weight
    QSpinBox *fromver;// spinbox to get the verticle you want to dfs or bfs from
    QComboBox *algo;// combo box to choose what algorithm you want to do
-
    QLabel *display;// qlabel that print dfs or bfs iterate
 
    static const int h = 55;//diameter of the circle drawn
    bool directed;//if this value is true, the verticles will be connected directedly, undirectedly otherwise
+   int v_connect;
+   //menu
+   QMenuBar*bar;
+   QMenu *fileMenu;
+   QMenu *graphMenu;
+
+   QAction *clAct;
+   QAction *clDrawn;
+   QAction *loadact;
+   QAction *saveact;
 };
 
 
