@@ -1,18 +1,23 @@
-#include "graph.h"
-#include "UI.h"
+#include "mainwindow.h"
 
 #include <QApplication>
-#include <QPushButton>
-#include <QVBoxLayout>
+#include "ui.h"
 
-int main(int argc, char ** argv)
+int main(int argc, char *argv[])
 {
-   Q_INIT_RESOURCE(Resources);
-   QApplication app{argc, argv};
-   GraphWidget w;
+    Q_INIT_RESOURCE(resources);
+    QApplication app{argc, argv};
+    ui w;
+    QPalette pal = QPalette();
 
-   w.setMinimumSize(500,700);
-   w.show();
+    // set black background
+    // Qt::black / "#000000" / "black"
+    pal.setColor(QPalette::Window, Qt::black);
 
-   return app.exec();
+    w.setAutoFillBackground(true);
+    w.setPalette(pal);
+    w.setMinimumSize(1000,1000);
+    w.show();
+
+    return app.exec();
 }

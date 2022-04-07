@@ -1,333 +1,230 @@
-#include "UI.h"
-
-//UI for drawing
-void DrawLineWithArrow(QPainter& painter, QPoint start, QPoint end) {
-
-  painter.setRenderHint(QPainter::Antialiasing, true);
-
-  qreal arrowSize = 10; // size of head
-
-  QLineF line(end, start);
-
-  double angle = std::atan2(-line.dy(), line.dx());
-  QPointF arrowP1 = line.p1() + QPointF(sin(angle + M_PI / 3) * arrowSize,
-                                        cos(angle + M_PI / 3) * arrowSize);
-  QPointF arrowP2 = line.p1() + QPointF(sin(angle + M_PI - M_PI / 3) * arrowSize,
-                                        cos(angle + M_PI - M_PI / 3) * arrowSize);
-
-  QPolygonF arrowHead;
-  arrowHead.clear();
-  arrowHead << line.p1() << arrowP1 << arrowP2;
-  painter.drawLine(line);
-  painter.drawPolygon(arrowHead);
-
-}//draw arrow
-
-void paintnumber(QPainter& painter , QRect r, int i)
-{
-    QString str1 = QString::number(i);
-    QByteArray ba = str1.toLocal8Bit();
-    const char *c_str2 = ba.data();
-    painter.drawText(r,Qt::AlignCenter, (c_str2));
-}//draw number from rectangle
-
-void paintnumfrompoint(QPainter& painter , QPoint p, int i)
-{
-    QString str1 = QString::number(i);
-    QByteArray ba = str1.toLocal8Bit();
-    const char *c_str2 = ba.data();
-    painter.drawText(p, (c_str2));
-}//draw number from point
+#include "ui.h"
+#include <QKeyEvent>
 
 
-//UI for interacting
-GraphWidget::GraphWidget(QWidget *parent)
+ui::ui(QWidget *parent)
     : QWidget(parent)
 {
     QUiLoader loader;
-
     QFile file(":/form.ui");
-    file.open(QFile::ReadOnly);
+    file.open(QIODevice::ReadOnly| QIODevice::Text );
     QWidget *formWidget = loader.load(&file, this);
     file.close();
-    node_1 = findChild<QSpinBox*>("V1");
-    node_2 = findChild<QSpinBox*>("V2");
-    weight = findChild<QSpinBox*>("weight");
-    fromver = findChild<QSpinBox*>("fromver");
-    QMetaObject::connectSlotsByName(this);
+
+    you = new Character();//your character
+    you->set_pos(24,24);
+    gamemap = new map();//current map
+    row = gamemap->ratio_between_height();
+    col = gamemap->ratio_between_width();
+    gamemap->setup_map();
+    cur_map = gamemap->get_map(1);
+
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(formWidget);
-    display = new QLabel;
 
-    layout->addWidget(display);
+
+
 
 
     setLayout(layout);
-    directed = false;
+    QMetaObject::connectSlotsByName(this);
 
-}//constructor of graph widget
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, QOverload<>::of(&ui::fall));
+    if (falling())
+            timer->start(100);
+    update();
 
-void GraphWidget::paintlist(QPainter &painter, QList<QPoint> list)
-{
-    for (int i = 0; i < edge.size(); i++)
-    {
-      int f_node = edge[i].x();
-      int s_node = edge[i].y();
-      QPoint p2 = Pointfromdis(vect[s_node],vect[f_node],h);
-      QPoint p1 = Pointfromdis(vect[f_node],vect[s_node],h);
-
-
-      painter.setPen(Qt::black);
-      painter.setBrush(Qt::black);
-      if (edge[i].z() == 1)
-      {
-         DrawLineWithArrow(painter,p2,p1);
-         if (edge[i].w() != 0)
-         {
-            QPoint p = ((p2+p1)/2);
-            paintnumfrompoint(painter,p,edge[i].w());
-         }
-       }
-       if (edge[i].z() == -1)
-       {
-          painter.setRenderHint(QPainter::Antialiasing, true);
-          painter.drawLine(p2,p1);
-          if (edge[i].w() != 0)
-          {
-              QPoint p = ((p2+p1)/2);
-              paintnumfrompoint(painter,p,edge[i].w());
-          }
-        }
-
-     }
-
-        painter.setPen(QPen{Qt::red,3});
-        painter.setBrush(Qt::red);
-        QList<QPoint>::iterator iter;
-        for (iter = list.begin();iter!=list.end();++iter)
-        {
-
-            QPoint p2 = Pointfromdis(vect[(*iter).y()], vect[(*iter).x()],h);
-
-
-            QPoint p1 = Pointfromdis(vect[(*iter).x()], vect[(*iter).y()],h);
-            DrawLineWithArrow(painter,p2,p1);
-
-        }
-
-     }
-
-QPoint GraphWidget::Pointfromdis(QPoint p, QPoint p0,int d)
-{
-
-    double x0 = p0.x();
-    double y0 = p0.y();
-
-    double xa = p.x();
-    double ya = p.y();
-
-    //line equation y=ax+b of p_1 and center of circle o(x0,y0)
-    double a = (y0-ya)/(x0-xa);
-    double b = y0-a*x0;
-
-    double cof1 = a*a + 1;
-    double cof2 = 2*a*(b-y0) - 2*x0;
-    double cof3 = x0*x0+(b-y0)*(b-y0)-(d/2)*(d/2);
-
-    double xb ;
-    if (xa<x0)
-    {
-        xb = (cof2*-1-sqrt(cof2*cof2-4*cof1*cof3))/(2*cof1);
-    }
-    else
-    {
-        xb = (cof2*-1+sqrt(cof2*cof2-4*cof1*cof3))/(2*cof1);
-    }
-    double yb = a*xb+b;
-
-
-    QPoint re_point(round(xb),round(yb));
-    return re_point;
 }
 
-void GraphWidget::paintEvent(QPaintEvent *)
+
+
+void ui::paintEvent(QPaintEvent *)
 {
-
  QPainter painter(this);
- auto r = QRect{QPoint(100, 100), QSize(50, 50)};
- QImage image(":/images/blue.png");
-  painter.setPen(QPen{Qt::black, 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin});
-
- for (int i = 0; i < vect.size(); i++)
- {
-   r.moveCenter(vect[i]);
-
-   painter.drawEllipse(r);
-
-   painter.drawImage(r,image);
-   paintnumber(painter,r,i);
-   g.reSize(vect.size());
-
-   //in the event of connecting two nodes
-   for (int i = 0; i < edge.size(); i++)
-   {
-     int f_node = edge[i].x();
-     int s_node = edge[i].y();
-     QPoint p2 = Pointfromdis(vect[s_node],vect[f_node],h);
-     QPoint p1 = Pointfromdis(vect[f_node],vect[s_node],h);
 
 
-     painter.setPen(QPen{Qt::black, 2,Qt::SolidLine});
-     painter.setBrush(Qt::black);
-     if (edge[i].z() == 1)
+
+ for (int i =0; i < row ;i++)
+     for (int j =0; j < col;j++)
      {
-        DrawLineWithArrow(painter,p2,p1);
-        if (edge[i].w() != 0)
-        {
-           QPoint p = ((p2+p1)/2);
-           paintnumfrompoint(painter,p,edge[i].w());
-        }
-      }
-      if (edge[i].z() == -1)
-      {
-         painter.drawLine(p2,p1);
-         if (edge[i].w() != 0)
-         {
-             QPoint p = ((p2+p1)/2);
-             paintnumfrompoint(painter,p,edge[i].w());
-         }
-       }
+         float h = i*cur_map[i][j].get_size().width();
+         float w = j*cur_map[i][j].get_size().height();
+         QSize size_block = cur_map[i][j].get_size();
+         auto r = QRect{QPoint(h,w),size_block};
+         painter.drawPixmap(r,cur_map[i][j].getpixmap());
+     }
 
-    }
+ you->setSize(42,42);
+ QSize char_size = you->getSize();
+ float x = you->get_pos().x();
+ float y = you->get_pos().y();
+ auto r = QRect{QPoint(x, y), char_size};
+ QPixmap you_img = you->getpixmap();
+ painter.drawPixmap(r,you_img);
 
 
-
-   if(l_b.size())
-   {
-
-     paintlist(painter,l_b);
-
-   }
-    if(l.size())
-    {
-
-      paintlist(painter,l);
-
-    }
-
-
-    //
-
-
-  painter.setPen(QPen{Qt::black, 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin});
-
-
-
+ if (falling())
+ {
+     timer->start(200);
 
  }
+
 }
 
-void GraphWidget::on_addEdge_clicked()
+void ui::fall()
 {
-   if (node_1->value() < vect.size() && node_2->value() < vect.size())
-    {
-        if (directed == true)
+    const int fall_per_milisec = 30;
+
+    float x = you->get_pos().x();
+    float y = you->get_pos().y();
+    int j = trunc(y * col/Height);
+
+
+    if (y+fall_per_milisec < gamemap->get_block_size().height()*(j+1) )
         {
-         for (int i = 0; i < edge.size();i++)
-         {
-               if (edge[i].z() == 1
-                    && (edge[i].x() == node_1->value()
-                    && edge[i].y() == node_2->value()
-                    && edge[i].w() == weight->value())
-                   )
-                   {
-                       edge[i].setZ(1);
-
-                   }
-         }
-
-         QVector4D p(node_1->value(), node_2->value(),1,weight->value());
-         edge.append(p);
-         g.addEdgedirec(node_1->value(), node_2->value(),weight->value());
-         update();
+            you->set_pos(x,y+fall_per_milisec);
         }
-        else
-        {
-            for (int i = 0; i < edge.size();i++)
-            {
-                if (edge[i].z() == 1
-                     && (edge[i].x() == node_1->value()
-                     && edge[i].y() == node_2->value()
-                     && edge[i].w() == weight->value())
-                    )
-                    {
-                        edge[i].setZ(-1);
-                    }
-
-            }
-            QVector4D p(node_1->value(), node_2->value(),-1,weight->value());
-            edge.append(p);
-
-            g.addEdgeundirec(node_1->value(), node_2->value(),weight->value());
-
-            update();
-        }
+    else{
+        you->set_pos(x,gamemap->get_block_size().height()*(j+1));
     }
-}
 
-void GraphWidget::on_BFS_clicked()
-{
-    if(fromver->value() > vect.size())
+    if(!falling())
     {
-     return;
+        timer->stop();
     }
-    l_b = g.BFS(fromver->value());
-    l.clear();
-    QList<QPoint>::iterator i;
-    QString str;
-    for (i = l_b.begin();i!=l_b.end();++i)
-    {
-        str.append(QString::number((*i).x())+" " +(QString::number((*i).y())));
-    }
+
+
     update();
-    display->setText(str);
-
-
 }
 
-void GraphWidget::on_DFS_clicked()
+bool ui::falling()
 {
-    if(fromver->value() > vect.size())
+
+    float x = you->get_pos().x();
+    float y = you->get_pos().y();
+    int i = trunc(x * row/Width);
+    int j = trunc(you->get_pos().y() * col/Height);
+
+
+    if (i>row-1 ||j>col-1)
+        return true;
+    if(!cur_map[i][j+1].isGround()){
+            return true;
+        }
+    else{
+            return false;
+        }
+
+
+
+}//
+
+
+
+void ui::keyPressEvent(QKeyEvent *event)
+{
+    int dis = you->get_walkstepdis();
+    float x = you->get_pos().x();
+    float y = you->get_pos().y();
+if (!falling())
     {
-     return;
+
+
+        if(event->key() == Qt::Key_Up)
+        {
+            you->set_pos(x,y-dis*5);
+
+        }
+
+        if(event->key() == Qt::Key_Down)
+        {
+            you->set_pos(x,y+dis);
+
+        }
+
+        if(event->key() == Qt::Key_Right && !face_object_infront() )
+        {
+            you->set_pos(x+dis,y);
+
+
+
+        }
+
+
+        if(event->key() == Qt::Key_Left&& !face_object_behind() )
+        {
+            you->set_pos(x-dis,y);
+
+        }
+        update();
     }
-    g.DFS(fromver->value());
-    l = g.getDFSlist();
-     l_b.clear();
-    QList<QPoint>::iterator i;
+
+  if (falling()){
+      if(event->key() == Qt::Key_Right && !face_object_infront() )
+      {
+          you->set_pos(x+dis,y);
 
 
 
-    QString str;
-    for (i = l.begin();i!=l.end();++i)
-    {
-        str.append(QString::number((*i).x()) +" " +(QString::number((*i).y())));
-    }
+      }
 
-     update();
-     display->setText(str);
+
+      if(event->key() == Qt::Key_Left&& !face_object_behind() )
+      {
+          you->set_pos(x-dis,y);
+
+      }
+      update();
+
+  }
+
 
 }
 
-void GraphWidget::on_undirected_clicked()
+
+
+bool ui::face_object_infront()
 {
-    directed = false;
+    float x = you->get_pos().x();
+    float y = you->get_pos().y();
+    int i = trunc(x * row/Width);
+    int j = trunc(y * col/Height);
+    int dis = you->get_walkstepdis();
+    QSize size = you->getSize();
 
+    if( cur_map[i+1][j].isGround())
+        return true;
+    else
+        return false;
 }
 
-void GraphWidget::on_directed_clicked()
+bool ui::face_object_behind()
 {
-    directed = true;
+    float x = you->get_pos().x();
+    float y = you->get_pos().y();
+    int i = trunc(x * row/Width);
+    int j = trunc(y * col/Height);
+    int dis = you->get_walkstepdis();
+    QSize size = you->getSize();
 
+    if (i == 0|| j==0)
+        return false;
+
+    if(cur_map[i-1][j].isGround())
+        return true;
+    else
+        return false;
 }
+
+
+
+
+
+
+
+
+
+
+
